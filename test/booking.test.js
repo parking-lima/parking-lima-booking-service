@@ -197,3 +197,32 @@ test('GET /api/v1/bookings/:id returns 400 for invalid ID', async () => {
     await new Promise(resolve => server.close(resolve));
   }
 });
+
+
+test('POST /api/v1/bookings returns 409 for overlapping bookings', async () => {
+  const repository = {
+    async create() {
+      const error = new Error('Exclusion constraint violated');
+      error.code = '23P01';
+      error.constraint = 'bookings_no_overlap';
+      throw error;
+    }
+  };
+
+  const service = createBookingService(repository);
+
+  const response = await requestBooking(service, {
+    userId: 1,
+    parkingSpaceId: 1,
+    startsAt: '2026-10-20T10:00:00Z',
+    endsAt: '2026-10-20T12:00:00Z'
+  });
+
+  assert.equal(response.status, 409);
+
+  const body = await response.json();
+  assert.match(
+    JSON.stringify(body),
+    /already booked/i
+  );
+});
