@@ -17,21 +17,26 @@ export function createApp({ bookingService } = {}) {
     app.use('/api/v1/bookings', createBookingRoutes(bookingService));
   }
 
-  app.use((error, req, res, next) => {
-    const status = [400, 404].includes(error.status)
-      ? error.status
+
+app.use((err, req, res, next) => {
+  const status =
+    Number.isInteger(err.status) &&
+    err.status >= 400 &&
+    err.status <= 599
+      ? err.status
       : 500;
 
-    if (status === 500) {
-      console.error(error);
-    }
+  if (status >= 500) {
+    console.error(err);
+  }
 
-    res.status(status).json({
-      error: status === 500
-        ? 'Internal server error'
-        : error.message
-    });
+  res.status(status).json({
+    error: status >= 500
+      ? 'Internal Server Error'
+      : err.message
   });
+});
+
 
   return app;
 }

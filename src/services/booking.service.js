@@ -24,12 +24,30 @@ export function createBookingService(repository) {
         throw error;
       }
 
-      return repository.create({
-        userId,
-        parkingSpaceId,
-        startsAt,
-        endsAt
-      });
+
+      try {
+        return await repository.create({
+          userId,
+          parkingSpaceId,
+          startsAt,
+          endsAt
+        });
+      } catch (error) {
+        if (
+          error.code === '23P01' &&
+          error.constraint === 'bookings_no_overlap'
+        ) {
+          const conflict = new Error(
+            'Parking space is already booked for this time'
+          );
+          conflict.status = 409;
+          throw conflict;
+        }
+
+        throw error;
+      }
+
+
     },
 
     async findAll() {
