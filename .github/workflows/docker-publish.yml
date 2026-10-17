@@ -46,4 +46,17 @@ jobs:
         with:
           context: .
           push: true
-          tags: ghcr.io/parking-lima/parking-lima-booking-service:latest
+          target: runtime
+          tags: |
+            ghcr.io/parking-lima/parking-lima-booking-service:latest
+            ghcr.io/parking-lima/parking-lima-booking-service:sha-${{ github.sha }}
+
+      - name: Build and push migration image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          target: migrations
+          tags: |
+            ghcr.io/parking-lima/parking-lima-booking-service:latest-migrations
+            ghcr.io/parking-lima/parking-lima-booking-service:sha-${{ github.sha }}-migrations
